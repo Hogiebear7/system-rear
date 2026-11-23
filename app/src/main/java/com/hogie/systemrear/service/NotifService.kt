@@ -77,11 +77,13 @@ class NotifService : NotificationListenerService() {
         instance = this
         Notifs.connected.value = true
         refresh()
+        Media.attach(this)
     }
 
     override fun onListenerDisconnected() {
         if (instance === this) instance = null
         Notifs.connected.value = false
+        Media.detach()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -105,6 +107,8 @@ class NotifService : NotificationListenerService() {
         val n = sbn.notification
         if (n.flags and Notification.FLAG_GROUP_SUMMARY != 0) return null
         val e = n.extras
+        // Music players have their own page.
+        if (n.category == Notification.CATEGORY_TRANSPORT || e.containsKey(Notification.EXTRA_MEDIA_SESSION)) return null
         val title = e.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString()
             ?: e.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: return null
         val text = (e.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: e.getCharSequence(Notification.EXTRA_TEXT))

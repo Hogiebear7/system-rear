@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -54,9 +55,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +79,7 @@ import com.hogie.systemrear.data.Leveling
 import com.hogie.systemrear.data.STAT_NAMES
 import com.hogie.systemrear.data.Settings
 import com.hogie.systemrear.data.Store
+import com.hogie.systemrear.service.Media
 import com.hogie.systemrear.service.Msg
 import com.hogie.systemrear.service.Notifs
 import com.hogie.systemrear.service.RecorderService
@@ -87,7 +93,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-private val PAGES = listOf("STATUS", "QUESTS", "MSGS", "CALL", "REC", "CLASS")
+private val PAGES = listOf("STATUS", "QUESTS", "MSGS", "MUSIC", "CALL", "REC", "CLASS")
 private val Red = Color(0xFFFF4D5E)
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -167,9 +173,10 @@ fun RearRoot(act: RearActivity) {
                         0 -> StatusPage(state, settings, accent)
                         1 -> QuestPage(state, accent, now)
                         2 -> MessagesPage(act, accent, settings, hide, openKey) { openKey = it }
-                        3 -> CallPage(act, accent)
-                        4 -> RecordPage(act, accent, now, hide)
-                        5 -> WorkoutPage(state, settings, accent)
+                        3 -> MusicPage(accent, now)
+                        4 -> CallPage(act, accent)
+                        5 -> RecordPage(act, accent, now, hide)
+                        6 -> WorkoutPage(state, settings, accent)
                     }
                 }
             }
@@ -454,6 +461,59 @@ private fun MessageDetail(act: RearActivity, accent: Color, settings: Settings, 
         }
     }
 }
+
+@Composable
+private fun MusicPage(accent: Color, now: LocalDateTime) {
+    val np by Media.now.collectAsState()
+    val m = np
+    SystemWindow("NOW PLAYING", accent, Modifier.fillMaxSize()) {
+        if (m == null) {
+            Text("Nothing playing. Start music on the phone and it appears here.", color = Dim, fontSize = 12.sp)
+            return@SystemWindow
+        }
+        now.second // tick the progress bar every second
+        val pos = m.currentPosition()
+        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+            val art = remember(m.art) { m.art?.asImageBitmap() }
+            Box(Modifier.size(104.dp).clip(RoundedCornerShape(6.dp)).background(Color(0x22FFFFFF)), contentAlignment = Alignment.Center) {
+                if (art != null) Image(art, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                else Text("♪", color = accent, fontSize = 40.sp)
+            }
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(m.title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(m.artist, color = Dim, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(m.app, color = accent, fontSize = 10.sp)
+                Spacer(Modifier.height(6.dp))
+                if (m.durationMs > 0) {
+                    BoxWithConstraints(Modifier.fillMaxWidth()) {
+                        val w = constraints.maxWidth
+                        Box(Modifier.fillMaxWidth().pointerInput(m.durationMs) {
+                            detectTapGestures { o -> Media.seekTo((o.x / w * m.durationMs).toLong()) }
+                        }.padding(vertical = 6.dp)) {
+                            Bar(pos.toFloat() / m.durationMs, accent, height = 5.dp)
+                        }
+                    }
+                    Row {
+                        Text(fmt(pos), color = Dim, fontSize = 10.sp, modifier = Modifier.weight(1f))
+                        Text(fmt(m.durationMs), color = Dim, fontSize = 10.sp)
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    SysButton("⏮", accent, size = 15.sp) { Media.previous() }
+                    SysButton(if (m.playing) "⏸" else "▶", accent, size = 15.sp) { Media.playPause() }
+                    SysButton("⏭", accent, size = 15.sp) { Media.next() }
+                    Spacer(Modifier.width(6.dp))
+                    SysButton("🔉", accent, size = 13.sp) { Media.volume(false) }
+                    SysButton("🔊", accent, size = 13.sp) { Media.volume(true) }
+                }
+            }
+        }
+    }
+}
+
+private fun fmt(ms: Long) = "%d:%02d".format(ms / 60000, ms / 1000 % 60)
 
 private data class Contact(val name: String, val number: String)
 
