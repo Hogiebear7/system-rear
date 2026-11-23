@@ -114,7 +114,7 @@ fun RearRoot(act: RearActivity) {
             delay(1000)
         }
     }
-    val hide = locked && settings.lockPrivacy
+    val hide = locked && settings.hideTextLocked
 
     var banner by remember { mutableStateOf<Msg?>(null) }
     var openKey by remember { mutableStateOf<String?>(null) }

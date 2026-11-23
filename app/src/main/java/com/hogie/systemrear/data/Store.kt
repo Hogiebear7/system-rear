@@ -239,7 +239,7 @@ object Store {
     private fun settingsJson(s: Settings) = JSONObject().apply {
         put("hunterName", s.hunterName); put("title", s.title); put("accent", s.accent)
         put("cameraInset", s.cameraInset.toDouble()); put("showOnWake", s.showOnWake)
-        put("keepAwake", s.keepAwake); put("lockPrivacy", s.lockPrivacy)
+        put("keepAwake", s.keepAwake); put("lockPrivacy", s.lockPrivacy); put("hideTextLocked", s.hideTextLocked)
         put("quickReplies", JSONArray(s.quickReplies)); put("displayId", s.displayId)
         put("token", s.token); put("coachBase", s.coachBase); put("coachEmail", s.coachEmail)
         put("coachToken", s.coachToken); put("classXp", s.classXp); put("dailyBonus", s.dailyBonus)
@@ -255,6 +255,7 @@ object Store {
             showOnWake = o.optBoolean("showOnWake", d.showOnWake),
             keepAwake = o.optBoolean("keepAwake", d.keepAwake),
             lockPrivacy = o.optBoolean("lockPrivacy", d.lockPrivacy),
+            hideTextLocked = o.optBoolean("hideTextLocked", d.hideTextLocked),
             quickReplies = o.optJSONArray("quickReplies")?.strings() ?: d.quickReplies,
             displayId = o.optInt("displayId", d.displayId),
             token = o.optString("token", d.token).ifEmpty { d.token },

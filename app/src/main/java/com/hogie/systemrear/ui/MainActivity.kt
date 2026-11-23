@@ -228,7 +228,8 @@ private fun Home(act: MainActivity) {
                     })
                 }
                 SwitchRow("Keep the back screen on while System is open (uses battery)", settings.keepAwake) { v -> Store.updateSettings { it.copy(keepAwake = v) } }
-                SwitchRow("Privacy while locked (hide message text; unlock to reply or call)", settings.lockPrivacy) { v -> Store.updateSettings { it.copy(lockPrivacy = v) } }
+                SwitchRow("Unlock the phone before replying, calling or playing recordings", settings.lockPrivacy) { v -> Store.updateSettings { it.copy(lockPrivacy = v) } }
+                SwitchRow("Hide message text while locked (sender still shows)", settings.hideTextLocked) { v -> Store.updateSettings { it.copy(hideTextLocked = v) } }
                 Text("Camera area on the left: ${(settings.cameraInset * 100).toInt()}%", color = Color.White, fontSize = 14.sp)
                 Slider(value = settings.cameraInset, onValueChange = { v -> Store.updateSettings { it.copy(cameraInset = v) } }, valueRange = 0f..0.45f)
             }

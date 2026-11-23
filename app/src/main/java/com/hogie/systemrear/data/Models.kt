@@ -49,6 +49,8 @@ data class Settings(
     val showOnWake: Boolean = true,
     val keepAwake: Boolean = false,
     val lockPrivacy: Boolean = true,
+    /** Hide message text on the back while locked. Off = preview shows, like Xiaomi's own back screen. */
+    val hideTextLocked: Boolean = false,
     val quickReplies: List<String> = DEFAULT_REPLIES,
     val displayId: Int = 1,
     val token: String = UUID.randomUUID().toString(),
